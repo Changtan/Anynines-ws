@@ -31,17 +31,14 @@ jobs:
         run: |
           # 解析邮箱和密码（格式：邮箱-----密码）
           CF_USER="${CF_CREDENTIALS%%-----*}"
-          CF_PASS="${CF_CREDENTIALS#*-----}"
+          - name: 安装Cloud Foundry CLI
+  run: |
+    wget -q -O - https://packages.cloudfoundry.org/debian/cli.cloudfoundry.org.key | sudo gpg --dearmor -o /usr/share/keyrings/cloudfoundry-cli-archive-keyring.gpg
+    echo "deb [signed-by=/usr/share/keyrings/cloudfoundry-cli-archive-keyring.gpg] https://packages.cloudfoundry.org/debian stable main" | sudo tee /etc/apt/sources.list.d/cloudfoundry-cli.list
+    sudo apt-get update
+    sudo apt-get install -y cf8-cli
+    cf version
 
-          cf api "$CF_API"
-          cf auth "$CF_USER" "$CF_PASS"
-
-          # 定位组织和空间
-          ORG=$(cf orgs | awk 'NR>3 {print $1; exit}')
-          cf target -o "$ORG"
-          SPACE=$(cf spaces | awk 'NR>3 {print $1; exit}')
-          if [ -z "$SPACE" ]; then
-            cf create-space dev
             SPACE="dev"
           fi
           cf target -o "$ORG" -s "$SPACE"
